@@ -1,0 +1,61 @@
+Rice_Image_Dataset/
+├── Arborio/
+│   ├── image1.jpg
+│   ├── image2.jpg
+│   └── ...
+├── Basmati/
+│   ├── image1.jpg
+│   ├── image2.jpg
+│   └── ...
+├── Ipsala/
+│   ├── image1.jpg
+│   ├── image2.jpg
+│   └── ...
+├── Jasmine/
+│   ├── image1.jpg
+│   ├── image2.jpg
+│   └── ...
+└── Karacadag/
+    ├── image1.jpg
+    ├── image2.jpg
+    └── ...import tensorflow as tf
+
+# Define parameters
+data_dir = 'Rice_Image_Dataset'
+img_height = 224
+img_width = 224
+batch_size = 32
+validation_split = 0.2
+test_split = 0.1
+seed = 123
+
+# Load training dataset
+train_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+    data_dir,
+    validation_split=validation_split + test_split,
+    subset="training",
+    seed=seed,
+    image_size=(img_height, img_width),
+    batch_size=batch_size
+)
+
+# Load validation dataset
+val_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+    data_dir,
+    validation_split=validation_split + test_split,
+    subset="validation",
+    seed=seed,
+    image_size=(img_height, img_width),
+    batch_size=batch_size
+)
+
+# Load test dataset
+test_dataset = tf.keras.preprocessing.image_dataset_from_directory(
+    data_dir,
+    validation_split=validation_split + test_split,
+    subset="validation",
+    seed=seed,
+    image_size=(img_height, img_width),
+    batch_size=batch_size
+)
+
