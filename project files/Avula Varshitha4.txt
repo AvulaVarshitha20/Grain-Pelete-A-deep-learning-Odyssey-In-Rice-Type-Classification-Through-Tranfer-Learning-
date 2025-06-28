@@ -1,0 +1,20 @@
+import tensorflow as tf
+
+def resize_image(image, label, target_size=(224, 224)):
+    """
+    Resizes an image to the target size and normalizes pixel values.
+
+    Args:
+        image (Tensor): Input image tensor.
+        label (Tensor): Corresponding label tensor.
+        target_size (tuple): Desired image dimensions (height, width).
+
+    Returns:
+        tuple: Resized image and label.
+    """
+    image = tf.image.resize(image, target_size)
+    image = tf.cast(image, tf.float32)  # Convert to float32
+    image = (image / 127.5) - 1  # Normalize to [-1, 1] range
+    return image, label# Assuming 'train_dataset' is your TensorFlow dataset
+train_dataset = train_dataset.map(resize_image, num_parallel_calls=tf.data.AUTOTUNE)
+
