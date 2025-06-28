@@ -1,0 +1,44 @@
+Rice_Image_Dataset/
+├── Arborio/
+│   ├── image1.jpg
+│   ├── image2.jpg
+│   └── ...
+├── Basmati/
+│   ├── image1.jpg
+│   ├── image2.jpg
+│   └── ...
+├── Ipsala/
+│   ├── image1.jpg
+│   ├── image2.jpg
+│   └── ...
+├── Jasmine/
+│   ├── image1.jpg
+│   ├── image2.jpg
+│   └── ...
+└── Karacadag/
+    ├── image1.jpg
+    ├── image2.jpg
+    └── ...import splitfolders
+
+input_dir = 'Rice_Image_Dataset'
+output_dir = 'Rice_Image_Split'
+
+splitfolders.ratio(input_dir, output=output_dir, seed=42, ratio=(0.7, 0.15, 0.15))
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader
+
+transform = transforms.Compose([
+    transforms.Resize((224, 224)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+train_dataset = datasets.ImageFolder('Rice_Image_Split/train', transform=transform)
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+
+val_dataset = datasets.ImageFolder('Rice_Image_Split/val', transform=transform)
+val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+
+test_dataset = datasets.ImageFolder('Rice_Image_Split/test', transform=transform)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
