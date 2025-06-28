@@ -1,0 +1,93 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.applications import ResNet50
+
+# Load the pre-trained ResNet50 model without the top classification layer
+base_model = ResNet50(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+
+# Freeze the base model layers
+base_model.trainable = False
+
+# Build the custom model
+model = models.Sequential([
+    base_model,
+    layers.GlobalAveragePooling2D(),
+    layers.Dense(1024, activation='relu'),
+    layers.Dense(5, activation='softmax')  # Assuming 5 rice varieties
+])
+
+# Compile the model
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+# Initialize the ImageDataGenerator for training with augmentation
+train_datagen = ImageDataGenerator(
+    rescale=1./255,
+    shear_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True
+)
+
+# Initialize the ImageDataGenerator for validation without augmentation
+val_datagen = ImageDataGenerator(rescale=1./255)
+
+# Load training data
+train_generator = train_datagen.flow_from_directory(
+    'Rice_Image_Split/train',
+    target_size=(224, 224),
+    batch_size=32,
+    class_mode='categorical'
+)
+
+# Load validation data
+val_generator = val_datagen.flow_from_directory(
+    'Rice_Image_Split/val',
+    target_size=(224, 224),
+    batch_size=32,
+    class_mode='categorical'
+)
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+
+# Define callbacks
+early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3)
+
+# Train the model
+history = model.fit(
+    train_generator,
+    epochs=20,
+    validation_data=val_generator,
+    callbacks=[early_stopping, reduce_lr]
+)# Unfreeze some layers of the base model
+base_model.trainable = True
+fine_tune_at = 100  # Fine-tune from the 100th layer onwards
+for layer in base_model.layers[:fine_tune_at]:
+    layer.trainable = False
+
+# Recompile the model with a lower learning rate
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5), loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Continue training the model
+history_fine = model.fit(
+    train_generator,
+    epochs=10,
+    validation_data=val_generator,
+    callbacks=[early_stopping, reduce_lr]
+)
+# Unfreeze some layers of the base model
+base_model.trainable = True
+fine_tune_at = 100  # Fine-tune from the 100th layer onwards
+for layer in base_model.layers[:fine_tune_at]:
+    layer.trainable = False
+
+# Recompile the model with a lower learning rate
+model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5), loss='categorical_crossentropy', metrics=['accuracy'])
+
+# Continue training the model
+history_fine = model.fit(
+    train_generator,
+    epochs=10,
+    validation_data=val_generator,
+    callbacks=[early_stopping, reduce_lr]
+)
+
