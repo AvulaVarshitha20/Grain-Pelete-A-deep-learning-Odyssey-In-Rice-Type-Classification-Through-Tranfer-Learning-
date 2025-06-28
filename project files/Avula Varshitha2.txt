@@ -1,0 +1,14 @@
+base = tf.keras.applications.MobileNetV2(
+    input_shape=(224,224,3), include_top=False, weights='imagenet'
+)
+base.trainable = False  # freeze for initial training
+x = base.output
+x = GlobalAveragePooling2D()(x)
+x = Dense(128, activation='relu')(x)
+x = Dropout(0.5)(x)
+preds = Dense(5, activation='softmax')(x)
+model = Model(inputs=base.input, outputs=preds)
+# Load all image paths and labels
+all_images = sorted(glob('data/*/*.jpg'))
+train, temp = train_test_split(all_images, test_size=0.3, stratify=labels)
+val, test = train_test_split(temp, test_size=0.5, stratify=temp_labels)
