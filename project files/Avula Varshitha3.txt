@@ -1,0 +1,36 @@
+# Numeric & data handling
+import os
+import numpy as np                 # array manipulations
+import pandas as pd                # optional: CSV/log handling
+import pathlib                     
+
+# Image preprocessing & visualization
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import cv2                         # optional: image loading/manipulation
+from PIL import Image             # alternative image library
+import matplotlib.pyplot as plt
+
+# Deep learning framework
+import tensorflow as tf           # core TensorFlow
+from tensorflow import keras 
+from tensorflow.keras import layers, models, callbacks
+from tensorflow.keras.applications import (
+    MobileNetV2, ResNet50, DenseNet121
+)
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import (
+    GlobalAveragePooling2D, Dense, Dropout
+)
+from tensorflow.keras.optimizers import Adam, SGD
+
+# For evaluation and saving models
+from sklearn.metrics import (
+    classification_report, confusion_matrix
+)
+import seaborn as sns              # for plotting confusion matrices
+
+# Optional: TensorFlow Hub for alternative backbones
+import tensorflow_hub as hub
+
+# Optional: TensorFlow Datasets for loading
+import tensorflow_datasets as tfds
