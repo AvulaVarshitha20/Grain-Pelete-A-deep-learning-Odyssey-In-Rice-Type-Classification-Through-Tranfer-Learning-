@@ -1,0 +1,36 @@
+import tensorflow as tf
+import matplotlib.pyplot as plt
+
+# Load a batch of images and labels
+dataset = tf.keras.preprocessing.image_dataset_from_directory(
+    'Rice_Image_Split/train',
+    image_size=(224, 224),
+    batch_size=9,
+    label_mode='int',
+    shuffle=True,
+    seed=123
+)
+
+# Extract a batch of images and labels
+image_batch, label_batch = next(iter(dataset))
+
+# Define class names based on your dataset
+class_names = ['Arborio', 'Basmati', 'Ipsala', 'Jasmine', 'Karacadag']
+
+# Plot the images in a 3x3 grid
+plt.figure(figsize=(10, 10))
+for i in range(9):
+    ax = plt.subplot(3, 3, i + 1)
+    plt.imshow(image_batch[i].numpy().astype("uint8"))
+    plt.title(class_names[label_batch[i]])
+    plt.axis("off")
+plt.show()Rice_Image_Split/
+├── train/
+│   ├── Arborio/
+│   ├── Basmati/
+│   ├── Ipsala/
+│   ├── Jasmine/
+│   └── Karacadag/
+├── val/
+├── test/
+
