@@ -1,0 +1,90 @@
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.applications import MobileNetV2
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.metrics import classification_report, confusion_matrix
+import seaborn as sns
+train_datagen = ImageDataGenerator(rescale=1./255,
+                                   shear_range=0.2,
+                                   zoom_range=0.2,
+                                   horizontal_flip=True,
+                                   validation_split=0.15)
+
+train_gen = train_datagen.flow_from_directory(
+    'Rice_Image_Split/train',
+    target_size=(224,224),
+    batch_size=32,
+    class_mode='categorical',
+    subset='training',
+    seed=42)
+
+val_gen = train_datagen.flow_from_directory(
+    'Rice_Image_Split/train',
+    target_size=(224,224),
+    batch_size=32,
+    class_mode='categorical',
+    subset='validation',
+    seed=42)
+base = MobileNetV2(weights='imagenet', include_top=False, input_shape=(224,224,3))
+base.trainable = False
+
+model = models.Sequential([
+    base,
+    layers.GlobalAveragePooling2D(),
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.5),
+    layers.Dense(5, activation='softmax')  # 5 rice types
+])
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.summary()
+callbacks = [
+    EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True),
+    ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3),
+    ModelCheckpoint('best_rice_model.h5', save_best_only=True)
+]
+history = model.fit(
+    train_gen,
+    validation_data=val_gen,
+    epochs=20,
+    callbacks=callbacks
+)
+plt.figure(figsize=(12,5))
+plt.subplot(1,2,1)
+plt.plot(history.history['accuracy'], label='train_acc')
+plt.plot(history.history['val_accuracy'], label='val_acc')
+plt.legend(), plt.title('Accuracy')
+plt.subplot(1,2,2)
+plt.plot(history.history['loss'], label='train_loss')
+plt.plot(history.history['val_loss'], label='val_loss')
+plt.legend(), plt.title('Loss')
+plt.show()
+model = tf.keras.models.load_model('best_rice_model.h5')
+
+test_datagen = ImageDataGenerator(rescale=1./255)
+test_gen = test_datagen.flow_from_directory(
+    'Rice_Image_Split/test',
+    target_size=(224,224),
+    batch_size=32,
+    class_mode='categorical',
+    shuffle=False
+)
+
+loss, acc = model.evaluate(test_gen)
+print(f'\n✔️ Test Accuracy: {acc * 100:.2f}%')
+pred = model.predict(test_gen, verbose=1)
+y_true = test_gen.classes
+y_pred = np.argmax(pred, axis=1)
+labels = list(test_gen.class_indices.keys())
+
+print(classification_report(y_true, y_pred, target_names=labels))
+cm = confusion_matrix(y_true, y_pred)
+plt.figure(figsize=(6,5))
+sns.heatmap(cm, annot=True, fmt='d', xticklabels=labels, yticklabels=labels, cmap='Blues')
+plt.xlabel('Predicted'), plt.ylabel('True')
+plt.title('Test Confusion Matrix')
+plt.show()
+model.save('grainpalette_final.keras')
